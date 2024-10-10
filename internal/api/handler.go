@@ -1,8 +1,12 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"guac-trivy-operator-webhook/internal/attestation"
+	"guac-trivy-operator-webhook/internal/guac"
 	"log"
 	"net/http"
 
@@ -11,6 +15,7 @@ import (
 	"github.com/guacsec/guac/pkg/handler/collector"
 	"github.com/guacsec/guac/pkg/handler/processor"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/encoding/protojson"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -58,21 +63,56 @@ func (s *Server) sbomHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 	log.Printf("received sbom report: %+v", into)
 
-	bom, err := json.Marshal(into.Report.Bom)
+	var processErrs error
+	processErrs = errors.Join(processErrs, processBom(r.Context(), into.Name, into.Name, into.Report.Bom, s.publisher))
+
+	clusterName, ok := r.Header["Clustername"]
+	if !ok {
+		return fmt.Errorf("missing Clustername header")
+	}
+
+	processErrs = errors.Join(processErrs, processDeploymentAttestation(r.Context(), into.Name, into.Namespace, clusterName[0], &into.Report.Artifact, &into.Report.Bom, s.publisher))
+	return processErrs
+}
+
+func processDeploymentAttestation(ctx context.Context, name, namespace, clusterName string, artifact *aquasecurityv1alpha1.Artifact, bom *aquasecurityv1alpha1.BOM, publisher *guac.Publisher) error {
+	purl := bom.Metadata.Component.BOMRef
+	totoStatement := attestation.Deployment(purl, artifact.Digest, namespace, clusterName)
+	marshaledStatement, err := protojson.Marshal(totoStatement)
+	if err != nil {
+		return fmt.Errorf("marshaling intoto statement: %w", err)
+	}
+
+	doc := &processor.Document{
+		Blob:   marshaledStatement,
+		Type:   processor.DocumentITE6Generic,
+		Format: processor.FormatJSON,
+		SourceInformation: processor.SourceInformation{
+			Collector:   string("TODO"),
+			Source:      fmt.Sprintf("%s/%s", namespace, name),
+			DocumentRef: events.GetDocRef(marshaledStatement),
+		},
+	}
+	collector.AddChildLogger(zap.S(), doc)
+	return publisher.Publish(ctx, doc)
+}
+
+func processBom(ctx context.Context, name, namespace string, bom aquasecurityv1alpha1.BOM, publisher *guac.Publisher) error {
+	marshaledBom, err := json.Marshal(bom)
 	if err != nil {
 		return fmt.Errorf("marshaling bom: %w", err)
 	}
 
 	doc := &processor.Document{
-		Blob:   bom,
+		Blob:   marshaledBom,
 		Type:   processor.DocumentUnknown,
 		Format: processor.FormatUnknown,
 		SourceInformation: processor.SourceInformation{
 			Collector:   string("TODO"),
-			Source:      fmt.Sprintf("%s/%s", into.Name, into.Namespace),
-			DocumentRef: events.GetDocRef(bom),
+			Source:      fmt.Sprintf("%s/%s", namespace, name),
+			DocumentRef: events.GetDocRef(marshaledBom),
 		},
 	}
 	collector.AddChildLogger(zap.S(), doc)
-	return s.publisher.Publish(r.Context(), doc)
+	return publisher.Publish(ctx, doc)
 }

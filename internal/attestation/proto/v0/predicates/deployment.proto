@@ -5,7 +5,7 @@ package attestation.predicates.reference.v0;
 import "in_toto_attestation/v1/resource_descriptor.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/in-toto/attestation/go/predicates/reference/v0";
+option go_package = "guac-trivy-operator-webhook/internal/attestation/gen/v0/predicates";
 
 message Deployment {
     message DecisionDetails {
