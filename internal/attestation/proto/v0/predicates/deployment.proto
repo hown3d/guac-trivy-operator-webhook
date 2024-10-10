@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package attestation.predicates.reference.v0;
+
+import "in_toto_attestation/v1/resource_descriptor.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/in-toto/attestation/go/predicates/reference/v0";
+
+message Deployment {
+    message DecisionDetails {
+        repeated in_toto_attestation.v1.ResourceDescriptor evidence = 1;
+        repeated in_toto_attestation.v1.ResourceDescriptor policy = 2;
+    }
+	google.protobuf.Timestamp  creationTime = 2;
+    map<string, string> scopes = 3;
+}

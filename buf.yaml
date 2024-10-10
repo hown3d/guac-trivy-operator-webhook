@@ -1,0 +1,9 @@
+version: v2
+modules:
+  - path: internal/attestation
+lint:
+  use:
+    - DEFAULT
+breaking:
+  use:
+    - FILE
