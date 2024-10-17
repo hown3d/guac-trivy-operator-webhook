@@ -27,7 +27,6 @@ func NewPublisher(ctx context.Context, blobAddr, pubsubAddr string) (*Publisher,
 	var pubsub *emitter.EmitterPubSub
 	if strings.HasPrefix(pubsubAddr, "nats://") {
 		// initialize jetstream
-		// TODO: pass in credentials file for NATS secure login
 		jetStream := emitter.NewJetStream(pubsubAddr, "", "")
 		if err := jetStream.JetStreamInit(ctx); err != nil {
 			return nil, fmt.Errorf("jetStream initialization failed with error: %v", err)

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -13,7 +14,7 @@ func errorMiddleware(f handle) http.HandlerFunc {
 		if err != nil {
 			log.Printf("error in handler: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error()))
+			fmt.Fprintf(w, "error: %v", err)
 			return
 		}
 	}

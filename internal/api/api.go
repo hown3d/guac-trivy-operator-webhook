@@ -2,29 +2,36 @@ package api
 
 import (
 	"context"
-	"guac-trivy-operator-webhook/internal/guac"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/guacsec/guac/pkg/handler/processor"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Server struct {
-	httpServer  *http.Server
-	publisher   *guac.Publisher
-	sbomDecoder runtime.Decoder
+	httpServer *http.Server
+	publisher  DocPublisher
+	decoder    runtime.Decoder
+	logger     *zap.Logger
 }
 
-func NewServer(publisher *guac.Publisher, decoder runtime.Decoder) *Server {
+type DocPublisher interface {
+	Publish(ctx context.Context, doc *processor.Document) error
+}
+
+func NewServer(publisher DocPublisher, decoder runtime.Decoder) *Server {
 	s := &Server{
-		publisher:   publisher,
-		sbomDecoder: decoder,
+		publisher: publisher,
+		decoder:   decoder,
+		logger:    zap.L(),
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /sbom", errorMiddleware(s.sbomHandler))
+	mux.HandleFunc("POST /report", errorMiddleware(s.reportHandler))
 	httpServer := &http.Server{
 		Addr:    ":9999",
 		Handler: mux,

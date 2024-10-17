@@ -13,7 +13,7 @@ make container start-service
  ```
 
 2. Run trivy operator. See [link](https://github.com/aquasecurity/trivy-operator/blob/main/CONTRIBUTING.md#out-of-cluster) for instructions.
-Set `OPERATOR_WEBHOOK_BROADCAST_URL=http://localhost:9999/sbom` when starting the trivy-operator \
+Set `OPERATOR_WEBHOOK_BROADCAST_URL=http://localhost:9999/report` when starting the trivy-operator \
 Enable only sbom generation with the following env vars:
 
   ```

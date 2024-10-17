@@ -11,7 +11,8 @@ func Decoder() runtime.Decoder {
 	scheme := runtime.NewScheme()
 	scheme.AddKnownTypes(aquasecurityv1alpha1.SchemeGroupVersion,
 		&aquasecurityv1alpha1.SbomReport{},
+		&aquasecurityv1alpha1.VulnerabilityReport{},
 	)
 	meta.AddToGroupVersion(scheme, aquasecurityv1alpha1.SchemeGroupVersion)
-	return serializer.NewCodecFactory(scheme, serializer.EnableStrict).UniversalDecoder()
+	return serializer.NewCodecFactory(scheme, serializer.EnableStrict).UniversalDecoder(aquasecurityv1alpha1.SchemeGroupVersion)
 }
