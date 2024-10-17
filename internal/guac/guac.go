@@ -9,12 +9,14 @@ import (
 	"github.com/guacsec/guac/pkg/emitter"
 	"github.com/guacsec/guac/pkg/handler/collector"
 	"github.com/guacsec/guac/pkg/handler/processor"
+	"go.uber.org/zap"
 )
 
 // Publisher is used to store SBOMs in blob store and publish events to guac event stream
 type Publisher struct {
 	blobStore *blob.BlobStore
 	pubsub    *emitter.EmitterPubSub
+	logger    *zap.Logger
 }
 
 func NewPublisher(ctx context.Context, blobAddr, pubsubAddr string) (*Publisher, error) {
@@ -39,9 +41,11 @@ func NewPublisher(ctx context.Context, blobAddr, pubsubAddr string) (*Publisher,
 	return &Publisher{
 		blobStore: blobStore,
 		pubsub:    pubsub,
+		logger:    zap.L(),
 	}, nil
 }
 
 func (p *Publisher) Publish(ctx context.Context, doc *processor.Document) error {
+	collector.AddChildLogger(p.logger.Sugar(), doc)
 	return collector.Publish(ctx, doc, p.blobStore, p.pubsub, true)
 }

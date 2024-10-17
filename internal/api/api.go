@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
 
@@ -31,7 +30,7 @@ func NewServer(publisher DocPublisher, decoder runtime.Decoder) *Server {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /report", errorMiddleware(s.reportHandler))
+	mux.HandleFunc("POST /report", s.errorMiddleware(s.reportHandler))
 	httpServer := &http.Server{
 		Addr:    ":9999",
 		Handler: mux,
@@ -44,7 +43,7 @@ func NewServer(publisher DocPublisher, decoder runtime.Decoder) *Server {
 func (s *Server) Run(ctx context.Context) error {
 	g, gCtx := errgroup.WithContext(ctx)
 	g.Go(func() error {
-		log.Println("serving on :9999")
+		s.logger.Info("serving on :9999")
 		return s.httpServer.ListenAndServe()
 	})
 	g.Go(func() error {

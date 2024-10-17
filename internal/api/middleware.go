@@ -2,17 +2,18 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 type handle func(http.ResponseWriter, *http.Request) error
 
-func errorMiddleware(f handle) http.HandlerFunc {
+func (s *Server) errorMiddleware(f handle) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := f(w, r)
 		if err != nil {
-			log.Printf("error in handler: %s", err)
+			s.logger.Error("handler", zap.Error(err))
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "error: %v", err)
 			return

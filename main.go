@@ -11,6 +11,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go.uber.org/zap"
+	runtime_zap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var (
@@ -22,6 +25,14 @@ var (
 
 func main() {
 	flag.Parse()
+	opts := runtime_zap.Options{}
+	opts.BindFlags(flag.CommandLine)
+	flag.Parse()
+
+	logger := runtime_zap.NewRaw(runtime_zap.UseFlagOptions(&opts))
+	zap.ReplaceGlobals(logger)
+	defer logger.Sync()
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 

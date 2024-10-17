@@ -25,6 +25,16 @@ Enable only sbom generation with the following env vars:
   OPERATOR_CONFIG_AUDIT_SCANNER_SCAN_ONLY_CURRENT_REVISIONS=false
   ```
 
+> [!WARNING]
+This project currently depends on a change in the trivy-operator: See <https://github.com/aquasecurity/trivy-operator/compare/main...hown3d:trivy-operator:vulnreport-purl>.
+To develop against the fork, clone the trivy-operator fork into the same folder where this project resides and setup a go workspace:
+
+```sh
+go work init
+go work use trivy-operator
+go work use guac-trivy-operator-webhook
+```
+
 3. Start the api server
 `make container start-in-guac`
 
