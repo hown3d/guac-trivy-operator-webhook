@@ -27,3 +27,9 @@ Enable only sbom generation with the following env vars:
 
 3. Start the api server
 `make container start-in-guac`
+
+# Testing
+
+```sh
+kubectl get sbomreports.aquasecurity.github.io -n $NAMESPACE $NAME -o json | curl -v -X POST --data-binary @- localhost:9999/report
+```
