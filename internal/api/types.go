@@ -11,19 +11,16 @@ type reportRequest struct {
 	OperatorObject *runtime.Unknown `json:"operatorObject"`
 }
 
-func (m *reportRequest) UnmarshalJSON(b []byte) error {
-	type internalReportRequest struct {
-		Verb           string           `json:"verb"`
-		OperatorObject *runtime.Unknown `json:"operatorObject"`
-	}
-	var internalReq internalReportRequest
-	err := json.Unmarshal(b, &internalReq)
+func (r *reportRequest) UnmarshalJSON(b []byte) error {
+	type alias reportRequest
+	var req alias
+	err := json.Unmarshal(b, &req)
 	if err != nil {
 		return err
 	}
-	if internalReq.Verb != "" {
-		m.OperatorObject = internalReq.OperatorObject
-		m.Verb = internalReq.Verb
+	if req.Verb != "" {
+		r.OperatorObject = req.OperatorObject
+		r.Verb = req.Verb
 		return nil
 	}
 
@@ -33,6 +30,6 @@ func (m *reportRequest) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	m.OperatorObject = obj
+	r.OperatorObject = obj
 	return nil
 }
