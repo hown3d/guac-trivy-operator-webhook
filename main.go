@@ -24,7 +24,6 @@ var (
 )
 
 func main() {
-	flag.Parse()
 	opts := runtime_zap.Options{}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()

@@ -38,12 +38,20 @@ func (s *Server) reportHandler(w http.ResponseWriter, r *http.Request) error {
 
 	switch typed := obj.(type) {
 	case *aquasecurityv1alpha1.SbomReport:
-		return s.processSbom(r.Context(), typed)
+		err = s.processSbom(r.Context(), typed)
 	case *aquasecurityv1alpha1.VulnerabilityReport:
-		return s.processVulnReport(r.Context(), typed)
+		err = s.processVulnReport(r.Context(), typed)
 	default:
 		s.logger.Info("recieved unknown report", zap.String("type", fmt.Sprintf("%T", typed)))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "unknown report type: %T", typed)
+		return nil
 	}
+	if err != nil {
+		return err
+	}
+	w.WriteHeader(http.StatusAccepted)
+	fmt.Fprint(w, "published report to guac")
 	return nil
 }
 
