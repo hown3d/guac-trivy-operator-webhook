@@ -9,7 +9,7 @@ import (
 	"time"
 
 	aquasecurityv1alpha1 "github.com/aquasecurity/trivy-operator/pkg/apis/aquasecurity/v1alpha1"
-	guac_attestation "github.com/guacsec/guac/pkg/certifier/attestation"
+	guacvuln "github.com/guacsec/guac/pkg/certifier/attestation/vuln"
 	"github.com/guacsec/guac/pkg/handler/collector"
 	"github.com/guacsec/guac/pkg/handler/processor"
 	toto_attestationv1 "github.com/in-toto/attestation/go/v1"
@@ -110,25 +110,25 @@ func (s *Server) processSbom(ctx context.Context, sbom *aquasecurityv1alpha1.Sbo
 	return s.publisher.Publish(ctx, doc)
 }
 
-func vulnAttestation(vuln *aquasecurityv1alpha1.Vulnerability, scanner *aquasecurityv1alpha1.Scanner, scannedOn *time.Time) guac_attestation.VulnerabilityStatement {
+func vulnAttestation(vuln *aquasecurityv1alpha1.Vulnerability, scanner *aquasecurityv1alpha1.Scanner, scannedOn *time.Time) guacvuln.VulnerabilityStatement {
 	subject := &toto_attestationv1.ResourceDescriptor{
 		Uri: vuln.PkgPURL,
 	}
-	predicate := guac_attestation.VulnerabilityPredicate{
-		Scanner: guac_attestation.Scanner{
+	predicate := guacvuln.VulnerabilityPredicate{
+		Scanner: guacvuln.Scanner{
 			Uri:     scanner.Name,
 			Version: scanner.Version,
-			Result: []guac_attestation.Result{
+			Result: []guacvuln.Result{
 				{
-					VulnerabilityId: vuln.VulnerabilityID,
+					Id: vuln.VulnerabilityID,
 				},
 			},
 		},
-		Metadata: guac_attestation.Metadata{
-			ScannedOn: scannedOn,
+		Metadata: guacvuln.Metadata{
+			ScanFinishedOn: scannedOn,
 		},
 	}
-	stmt := guac_attestation.VulnerabilityStatement{
+	stmt := guacvuln.VulnerabilityStatement{
 		Statement: toto_attestationv1.Statement{
 			Type:    toto_attestationv1.StatementTypeUri,
 			Subject: []*toto_attestationv1.ResourceDescriptor{subject},
